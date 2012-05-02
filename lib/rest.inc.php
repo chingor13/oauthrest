@@ -186,20 +186,30 @@ abstract class OAuthRestController {
   }
 
   public function index() {
-    return $this->filter($this->db->get_results("SELECT * FROM " . $this->table() . " " . $this->where()));
+    return $this->filter($this->db->get_results("SELECT * FROM " . $this->table() . " WHERE " . $this->where()));
   }
 
   public function show() {
-    $result = $this->filter($this->db->get_results("SELECT * FROM " . $this->table() . " WHERE ID=" . $this->params['id'] . " LIMIT 1"));
+    $sql = $this->db->prepare("SELECT * FROM " . $this->table() . " WHERE ID=%d" . " LIMIT 1", $this->params['id']);
+    $result = $this->filter($this->db->get_results($sql));
     return $result[0];
   }
 
   public function create() {
-    echo "CREATE";
+    $resp = $this->db->insert($this->table(), $this->object_params());
+    $result_id = $this->db->insert_id;
+    $result = $this->filter($this->db->get_results("SELECT * FROM " . $this->table() . " WHERE ID=" . $result_id . " LIMIT 1"));
+    return $result[0];
   }
 
   public function update() {
-    echo "UPDATE";
+    $sql = $this->db->prepare("SELECT * FROM " . $this->table() . " WHERE ID=%d" . " LIMIT 1", $this->params['id']);
+    $result = $this->filter($this->db->get_results($sql));
+    if($result) {
+      $resp = $this->db->insert($this->table(), $this->object_params(), array("id" => $this->params['id']));
+    }
+    $result = $this->filter($this->db->get_results($sql));
+    return $result[0];
   }
 
   protected function table() {
@@ -208,11 +218,34 @@ abstract class OAuthRestController {
   }
 
   protected function filter($results) {
-    return $results;
+    if(is_array($results)) {
+      foreach($results as $i => $result) {
+        $results[$i] = $this->filter_result($result);
+      }
+      return $results;
+    } else {
+      return $this->filter_result($result);
+    }
+  }
+
+  protected function filter_result($result) {
+    return get_object_vars($result);
   }
 
   protected function where() {
-    return "";
+    return "1=1";
+  }
+
+  protected function object_params() {
+    $object_params = $this->params[$this->object_name()];
+    if(is_null($object_params)) {
+      $object_params = array();
+    }
+    return $object_params;
+  }
+
+  protected function object_name() {
+    return "default";
   }
 
 }
@@ -223,7 +256,18 @@ class PostsController extends OAuthRestController {
   }
 
   protected function where() {
-    return "WHERE ID > 0 AND post_type LIKE 'post'";
+    return "ID > 0 AND post_type LIKE 'post'";
+  }
+
+  protected function filter_result($result) {
+    $result = get_object_vars($result);
+    unset($result['post_password']);
+    unset($result['menu_order']);
+    return $result;
+  }
+
+  protected function object_name() {
+    return "post";
   }
 }
 
