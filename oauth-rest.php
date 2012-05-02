@@ -35,7 +35,7 @@ class OAuthRest {
 
   function insert_rewrite_rules($rules) {
     $new_rules = array(
-      '(api)/(.*)$' => 'index.php?pagename=$matches[1]&request=$matches[2]'
+      '(api)/(.*)$' => 'index.php?pagename=$matches[1]&oauth=api&request=$matches[2]'
     );
     return $new_rules + $rules;
   }
@@ -48,13 +48,6 @@ class OAuthRest {
   function add_query_var($vars) {
     array_push($vars, 'request');
     return $vars;
-  }
-
-  function parse_query($query) {
-    if(!empty($query->query_vars['request'])) {
-      self::dispatch();
-      exit();
-    }
   }
 
   public static function dispatch() {
@@ -81,12 +74,12 @@ class OAuthRest {
 register_activation_hook(__FILE__, array('OAuthRest', 'install'));
 register_deactivation_hook(__FILE__, array('OAuthRest', 'remove'));
 
-// The method that returns the api data
-//add_shortcode('oauth-rest', array('OAuthRest', 'dispatch'));
-
 add_filter('rewrite_rules_array', array('OAuthRest', 'insert_rewrite_rules'));
 add_filter('query_vars', array('OAuthRest', 'add_query_var'));
 add_filter('init', array('OAuthRest', 'flush_rewrite_rules'));
 
-add_action('parse_query', array('OAuthRest', 'parse_query'));
+//add_action('wp', array('OAuthRest', 'dispatch'));
+
+// OAuth integration
+add_oauth_method('api', array('OAuthRest', 'dispatch'))
 ?>
