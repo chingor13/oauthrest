@@ -263,6 +263,7 @@ class PostsController extends OAuthRestController {
     $result = get_object_vars($result);
     unset($result['post_password']);
     unset($result['menu_order']);
+    $result['permalink'] = get_permalink($result['ID']);
     return $result;
   }
 
