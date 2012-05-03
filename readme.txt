@@ -44,6 +44,14 @@ Endpoints:
 
 Fork my repo on [github](http://github.com/chingor13/oauth-rest) and send me a pull request.
 
+= Can I limit which endpoints require authentication? =
+
+No, not at this time.  Feel free to help me out and send me a pull request.
+
+== To Do ==
+
+1. Limit authentication to specific endpoints (customizable)
+
 == Changelog ==
 
 **0.1.0 - 2012-05-03**
