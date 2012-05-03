@@ -3,15 +3,17 @@ Contributors: chingor13
 Tags: api,rest,oauth,server
 Requires at least: 2.8
 Tested up to: 3.3.2
-Stable tag: 0.1
+Stable tag: 0.1.0
 License: GPLv2
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
-OAuthRest is an implementation of a REST api.  It uses authentication via the oauth-provider plugin.
+OAuthRest is an implementation of a resourceful REST api.  It uses authentication via the oauth-provider plugin.
 
 == Description ==
 
-This plugin enables a REST interface for posts and comments.  Authentication is handled via the [oauth-provider plugin](http://wordpress.org/extend/plugins/oauth-provider/).
+This plugin enables a resourceful REST interface for posts and comments.  Authentication is handled via the [oauth-provider plugin](http://wordpress.org/extend/plugins/oauth-provider/).
+
+For more information about resourceful routing, see [here](http://guides.rubyonrails.org/routing.html).
 
 Acceptable return formats:
 
@@ -20,10 +22,14 @@ Acceptable return formats:
 
 Endpoints:
 
-* GET - /api/posts
-* GET - /api/posts/:id
-* POST - /api/posts
-* PUT - /api/posts/:id
+* GET - /api/posts.:format
+* GET - /api/posts/:id.:format
+* POST - /api/posts.:format
+* PUT - /api/posts/:id.:format
+* GET - /api/comments.:format
+* GET - /api/comments/:id.:format
+* POST - /api/comments.:format
+* PUT - /api/comments/:id.:format
 
 == Installation ==
 
@@ -34,8 +40,11 @@ Endpoints:
 
 == Frequently Asked Questions ==
 
-== Screenshots ==
+= How can I contribute to this plugin? =
+
+Fork my repo on [github](http://github.com/chingor13/oauth-rest) and send me a pull request.
 
 == Changelog ==
 
-
+**0.1.0 - 2012-05-03**
+Initial Release.

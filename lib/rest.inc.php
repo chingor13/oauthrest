@@ -271,4 +271,18 @@ class PostsController extends OAuthRestController {
   }
 }
 
+class CommentsController extends OAuthRestController {
+  protected function table() {
+    return $this->db->comments;
+  }
+
+  protected function where() {
+    return "ID > 0";
+  }
+
+  protected function object_name() {
+    return "comment";
+  }
+}
+
 ?>
