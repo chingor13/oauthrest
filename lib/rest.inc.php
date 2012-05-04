@@ -261,9 +261,12 @@ class PostsController extends OAuthRestController {
 
   protected function filter_result($result) {
     $result = get_object_vars($result);
+    $result['id'] = $result['ID'];
+    unset($result['ID']);
     unset($result['post_password']);
     unset($result['menu_order']);
-    $result['permalink'] = get_permalink($result['ID']);
+    $result['permalink'] = get_permalink($result['id']);
+    $result['trackback_count'] = 0; // FIXME
     return $result;
   }
 
