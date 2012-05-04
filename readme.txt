@@ -3,7 +3,7 @@ Contributors: chingor13
 Tags: api,rest,oauth,server
 Requires at least: 2.8
 Tested up to: 3.3.2
-Stable tag: 0.1.0
+Stable tag: 0.1.1
 License: GPLv2
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -17,8 +17,7 @@ For more information about resourceful routing, see [here](http://guides.rubyonr
 
 Acceptable return formats:
 
-* JSON (preferred)
-* XML
+* JSON
 
 Endpoints:
 
@@ -56,3 +55,6 @@ No, not at this time.  Feel free to help me out and send me a pull request.
 
 **0.1.0 - 2012-05-03**
 Initial Release.
+
+**0.1.1 - 2012-05-04**
+Remove XML format. JSON is much more widely accepted and encoding/decoding is built into PHP.
