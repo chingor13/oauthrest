@@ -33,7 +33,7 @@ Endpoints:
 
 == Installation ==
 
-1. Upload `oauth-rest` to the `/wp-content/plugins/` directory
+1. Upload `oauthrest` to the `/wp-content/plugins/` directory
 1. Activate the plugin through the 'Plugins' menu in WordPress
 1. Create a consumer using the 'OAuth Provider' menu
 1. Profit
@@ -42,7 +42,7 @@ Endpoints:
 
 = How can I contribute to this plugin? =
 
-Fork my repo on [github](http://github.com/chingor13/oauth-rest) and send me a pull request.
+Fork my repo on [github](http://github.com/chingor13/oauthrest) and send me a pull request.
 
 = Can I limit which endpoints require authentication? =
 
