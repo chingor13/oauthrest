@@ -59,7 +59,7 @@ class OAuthRest {
         $controller = new $controller_class($router);
         $action = $router->action;
         $results = $controller->$action();
-        $formatter = new OAuthRestFormatter($results, $router->format);
+        $formatter = new OAuthRestFormatter($results);
         $formatter->send();
       } else {
         die(OAuthRestFormatter::sendResponse(404));

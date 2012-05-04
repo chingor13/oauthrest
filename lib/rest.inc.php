@@ -1,6 +1,5 @@
 <?php
 require_once('jsonwrapper/jsonwrapper.php');
-require_once('xmlwrapper/xmlwrapper.php');
 class OAuthRestRouter {
   public $controller, $action, $params, $format, $method;
 
@@ -15,9 +14,6 @@ class OAuthRestRouter {
 
     // parse the format
     $format_parts = explode(".", $path);
-    if(count($format_parts) != 2) {
-      return;
-    }
     $this->format = $format_parts[1];
     $path = $format_parts[0];
 
@@ -27,11 +23,18 @@ class OAuthRestRouter {
         $this->params = $_GET;
         break;
       case 'post':
-        $this->params = $_POST;
-        break;
       case 'put':
-        parse_str(file_get_contents('php://input'), $put_vars);
-        $this->params = array_merge($_POST, $put_vars);
+        $this->params = $_POST;
+        $data = file_get_contents('php://input');
+        if(!empty($data)) {
+          $json_data = (array) json_decode($data);
+          if(!empty($json_data)) {
+            $this->params = array_merge($this->params, $json_data);
+          } else {
+            parse_str($data, $json_data);
+            $this->params = array_merge($this->params, $json_data);
+          }
+        }
         break;
       default:
         $this->params = array();
@@ -62,27 +65,10 @@ class OAuthRestRouter {
 }
 
 class OAuthRestFormatter {
-  public $results, $format;
+  public $results;
 
-  public function __construct($results, $format) {
+  public function __construct($results) {
     $this->results = $results;
-    $this->format = $format;
-  }
-
-  public function to_xml() {
-    // Build our XML Wrapper
-    $xmlwrapper = new XMLWrapper('1.0', 'utf-8');
-    // We want our output nice and tidy
-    $xmlwrapper->formatOutput = true;
-    $xmlwrapper->tag = "result";
-
-    // Initialize our root element tag
-    $root = $xmlwrapper->createElement("results");
-    $root = $xmlwrapper->appendChild($root);
-
-    $xmlwrapper->fromMixed($this->results, $root);
-
-    return $xmlwrapper->saveXML();
   }
 
   public function to_json() {
@@ -90,19 +76,11 @@ class OAuthRestFormatter {
   }
 
   public function to_s() {
-    if($this->format == "xml") {
-      return $this->to_xml();
-    } else {
-      return $this->to_json();
-    }
+    return $this->to_json();
   }
 
   public function content_type() {
-    if($this->format == "xml") {
-      return "application/xml";
-    } else {
-      return "application/json";
-    }
+    return "application/json";
   }
 
   public function send() {
@@ -206,7 +184,7 @@ abstract class OAuthRestController {
     $sql = $this->db->prepare("SELECT * FROM " . $this->table() . " WHERE ID=%d" . " LIMIT 1", $this->params['id']);
     $result = $this->filter($this->db->get_results($sql));
     if($result) {
-      $resp = $this->db->insert($this->table(), $this->object_params(), array("id" => $this->params['id']));
+      $resp = $this->db->update($this->table(), $this->filter_incoming_data($this->object_params()), array("id" => $this->params['id']));
     }
     $result = $this->filter($this->db->get_results($sql));
     return $result[0];
@@ -232,6 +210,10 @@ abstract class OAuthRestController {
     return get_object_vars($result);
   }
 
+  protected function filter_incoming_data($data) {
+    return $data;
+  }
+
   protected function where() {
     return "1=1";
   }
@@ -241,7 +223,7 @@ abstract class OAuthRestController {
     if(is_null($object_params)) {
       $object_params = array();
     }
-    return $object_params;
+    return (array) $object_params;
   }
 
   protected function object_name() {
@@ -268,6 +250,10 @@ class PostsController extends OAuthRestController {
     $result['permalink'] = get_permalink($result['id']);
     $result['trackback_count'] = 0; // FIXME
     return $result;
+  }
+
+  protected function filter_incoming_data($data) {
+    return array_intersect_key($data, array("post_title" => null, "post_content" => null, "post_status" => null));
   }
 
   protected function object_name() {
