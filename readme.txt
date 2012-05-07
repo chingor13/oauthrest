@@ -3,7 +3,7 @@ Contributors: chingor13
 Tags: api,rest,oauth,server
 Requires at least: 2.8
 Tested up to: 3.3.2
-Stable tag: 0.1.1
+Stable tag: 0.1.2
 License: GPLv2
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -58,3 +58,6 @@ Initial Release.
 
 **0.1.1 - 2012-05-04**
 Remove XML format. JSON is much more widely accepted and encoding/decoding is built into PHP.
+
+**0.1.2 - 2012-05-04**
+Fix comments resource endpoint.
