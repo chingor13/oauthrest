@@ -164,27 +164,28 @@ abstract class OAuthRestController {
   }
 
   public function index() {
-    return $this->filter($this->db->get_results("SELECT * FROM " . $this->table() . " WHERE " . $this->where()));
+    $sql = "SELECT * FROM " . $this->table() . " WHERE " . $this->where();
+    return $this->filter($this->db->get_results($sql));
   }
 
   public function show() {
-    $sql = $this->db->prepare("SELECT * FROM " . $this->table() . " WHERE ID=%d" . " LIMIT 1", $this->params['id']);
+    $sql = $this->db->prepare("SELECT * FROM " . $this->table() . " WHERE " . $this->primary_key() . "=%d" . " LIMIT 1", $this->params['id']);
     $result = $this->filter($this->db->get_results($sql));
     return $result[0];
   }
 
   public function create() {
-    $resp = $this->db->insert($this->table(), $this->object_params());
+    $resp = $this->db->insert($this->table(), $this->filter_incoming_data($this->object_params(), true));
     $result_id = $this->db->insert_id;
-    $result = $this->filter($this->db->get_results("SELECT * FROM " . $this->table() . " WHERE ID=" . $result_id . " LIMIT 1"));
+    $result = $this->filter($this->db->get_results("SELECT * FROM " . $this->table() . " WHERE " . $this->primary_key() . "=" . $result_id . " LIMIT 1"));
     return $result[0];
   }
 
   public function update() {
-    $sql = $this->db->prepare("SELECT * FROM " . $this->table() . " WHERE ID=%d" . " LIMIT 1", $this->params['id']);
+    $sql = $this->db->prepare("SELECT * FROM " . $this->table() . " WHERE " . $this->primary_key() . "=%d" . " LIMIT 1", $this->params['id']);
     $result = $this->filter($this->db->get_results($sql));
     if($result) {
-      $resp = $this->db->update($this->table(), $this->filter_incoming_data($this->object_params()), array("id" => $this->params['id']));
+      $resp = $this->db->update($this->table(), $this->filter_incoming_data($this->object_params()), array($this->primary_key() => $this->params['id']));
     }
     $result = $this->filter($this->db->get_results($sql));
     return $result[0];
@@ -212,6 +213,10 @@ abstract class OAuthRestController {
 
   protected function filter_incoming_data($data) {
     return $data;
+  }
+
+  protected function primary_key() {
+    return "ID";
   }
 
   protected function where() {
@@ -248,12 +253,18 @@ class PostsController extends OAuthRestController {
     unset($result['post_password']);
     unset($result['menu_order']);
     $result['permalink'] = get_permalink($result['id']);
-    $result['trackback_count'] = 0; // FIXME
+
+    # trackback count
+    $sql = $this->db->prepare("SELECT COUNT(*) AS `c` FROM " . $this->db->comments . " WHERE comment_type='trackback'");
+    $r = $this->db->get_results($sql);
+    $result['trackback_count'] = $r[0]->c;
     return $result;
   }
 
-  protected function filter_incoming_data($data) {
-    return array_intersect_key($data, array("post_title" => null, "post_content" => null, "post_status" => null));
+  protected function filter_incoming_data($data, $inserting = false) {
+    $d = array_intersect_key($data, array("post_title" => null, "post_content" => null, "post_status" => null));
+    $d["post_type"] = "post";
+    return $d;
   }
 
   protected function object_name() {
@@ -267,7 +278,35 @@ class CommentsController extends OAuthRestController {
   }
 
   protected function where() {
-    return "ID > 0";
+    if($this->params['post_id']) {
+      return $this->db->prepare("comment_post_ID = %d", $this->params['post_id']);
+    } else {
+      return "comment_ID > 0";
+    }
+  }
+
+  protected function filter_result($result) {
+    $result = get_object_vars($result);
+    $result['id'] = $result['comment_ID'];
+    unset($result['comment_ID']);
+
+    $result['post_id'] = $result['comment_post_ID'];
+    unset($result['comment_post_ID']);
+
+    return $result;
+  }
+
+  protected function filter_incoming_data($data, $inserting = false) {
+    $d = array_intersect_key($data, array("comment_content" => null, "comment_parent" => null));
+    $d["comment_post_ID"] = $data["post_id"];
+    if($inserting) {
+      $d["comment_date"] = $d["comment_date_gmt"] = date("Y-m-d H:i:s");
+    }
+    return $d;
+  }
+
+  protected function primary_key() {
+    return "comment_ID";
   }
 
   protected function object_name() {
