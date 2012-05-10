@@ -203,7 +203,7 @@ abstract class OAuthRestController {
       }
       return $results;
     } else {
-      return $this->filter_result($result);
+      return $this->filter_result($results);
     }
   }
 
@@ -238,18 +238,30 @@ abstract class OAuthRestController {
 }
 
 class PostsController extends OAuthRestController {
-  protected function table() {
-    return $this->db->posts;
+  public function index() {
+    // use the built-in methods to fetch blog posts
+    return $this->filter(get_posts());
   }
 
-  protected function where() {
-    return "ID > 0 AND post_type LIKE 'post'";
+  public function show() {
+    return $this->filter(get_post($this->params['id']));
+  }
+
+  public function create() {
+    $post_id = wp_insert_post($this->filter_incoming_data($this->object_params(), true));
+    return $this->filter(get_post($post_id));
+  }
+
+  public function update() {
+    $post_id = wp_update_post($this->filter_incoming_data($this->object_params()));
+    return $this->filter(get_post($post_id));
   }
 
   protected function filter_result($result) {
     $result = get_object_vars($result);
-    $result['id'] = $result['ID'];
+    $id = $result['ID'];
     unset($result['ID']);
+    $result['id'] = $id;
     unset($result['post_password']);
     unset($result['menu_order']);
     $result['permalink'] = get_permalink($result['id']);
@@ -263,7 +275,11 @@ class PostsController extends OAuthRestController {
 
   protected function filter_incoming_data($data, $inserting = false) {
     $d = array_intersect_key($data, array("post_title" => null, "post_content" => null, "post_status" => null));
+    if(!$inserting && $this->params["id"]) {
+      $d["id"] = $this->params["id"];
+    }
     $d["post_type"] = "post";
+    $d["post_author"] = get_current_user_id();
     return $d;
   }
 
@@ -273,16 +289,22 @@ class PostsController extends OAuthRestController {
 }
 
 class CommentsController extends OAuthRestController {
-  protected function table() {
-    return $this->db->comments;
+  public function index() {
+    return $this->filter(get_comments(array("post_id" => $this->params["post_id"])));
   }
 
-  protected function where() {
-    if($this->params['post_id']) {
-      return $this->db->prepare("comment_post_ID = %d", $this->params['post_id']);
-    } else {
-      return "comment_ID > 0";
-    }
+  public function show() {
+    return $this->filter(get_comment($this->params["id"]));
+  }
+
+  public function create() {
+    $comment_id = wp_insert_comment($this->filter_incoming_data($this->object_params(), true));
+    return $this->filter(get_comment($comment_id));
+  }
+
+  public function update() {
+    wp_update_comment($this->filter_incoming_data($this->object_params()));
+    return $this->filter(get_comment($this->params["id"]));
   }
 
   protected function filter_result($result) {
@@ -300,7 +322,14 @@ class CommentsController extends OAuthRestController {
     $d = array_intersect_key($data, array("comment_content" => null, "comment_parent" => null));
     $d["comment_post_ID"] = $data["post_id"];
     if($inserting) {
+      // add my user data
+      $user_info = get_userdata(get_current_user_id());
       $d["comment_date"] = $d["comment_date_gmt"] = date("Y-m-d H:i:s");
+      $d["comment_author"] = $user_info->display_name;
+      $d["comment_author_email"] = $user_info->user_email;
+      $d["comment_author_url"] = $user_info->user_url;
+    } elseif($this->params["id"]) {
+      $d["comment_ID"] = $this->params["id"];
     }
     return $d;
   }

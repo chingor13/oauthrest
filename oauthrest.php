@@ -35,7 +35,7 @@ class OAuthRest {
 
   function insert_rewrite_rules($rules) {
     $new_rules = array(
-      '(api)/(.*)$' => 'index.php?pagename=$matches[1]&oauth=api&request=$matches[2]'
+      '(api)/(.*)$' => 'index.php?oauth=api&request=$matches[2]'
     );
     return $new_rules + $rules;
   }

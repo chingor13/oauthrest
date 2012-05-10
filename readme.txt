@@ -3,7 +3,7 @@ Contributors: chingor13
 Tags: api,rest,oauth,server
 Requires at least: 2.8
 Tested up to: 3.3.2
-Stable tag: 0.1.3
+Stable tag: 0.2.0
 License: GPLv2
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -64,3 +64,6 @@ Fix comments resource endpoint.
 
 **0.1.3 - 2012-05-07**
 Fix trackback count for posts.  Fix comment dates.
+
+**0.2.0 - 2012-05-10**
+Use the build-in functions when interacting with posts and comments.  Fix routing so that we don't require an "api" page to be created.
